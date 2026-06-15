@@ -1,0 +1,116 @@
+@{
+    ViewData["Title"] = "Thêm sản phẩm mới";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h1>Thêm sản phẩm mới</h1>
+
+            @if (ViewBag.Message != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @ViewBag.Message
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <form method="post" enctype="multipart/form-data" class="needs-validation">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    <label for="name" class="form-label">Tên sản phẩm <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="name" name="name" required placeholder="Nhập tên sản phẩm">
+                    <small class="form-text text-muted">Tên sản phẩm không được để trống</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="price" class="form-label">Giá (VNĐ) <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="price" name="price" required placeholder="Nhập giá sản phẩm" min="0" step="1000">
+                    <small class="form-text text-muted">Giá phải lớn hơn 0</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="files" class="form-label">Hình ảnh sản phẩm <span class="text-danger">*</span></label>
+                    <input type="file" class="form-control" id="files" name="files" multiple required accept=".jpg,.jpeg,.png">
+                    <small class="form-text text-muted">
+                        Hỗ trợ: JPG, JPEG, PNG | Tối đa 5MB/tệp | Có thể chọn nhiều tệp
+                    </small>
+                    <div id="fileList" class="mt-2"></div>
+                </div>
+
+                <div class="mb-3">
+                    <div id="imagePreview" class="row"></div>
+                </div>
+
+                <div class="d-grid gap-2 d-sm-flex justify-content-sm-between">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-save"></i> Lưu sản phẩm
+                    </button>
+                    <a href="@Url.Action("Index", "Product")" class="btn btn-secondary btn-lg">
+                        <i class="bi bi-arrow-left"></i> Quay lại
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('files').addEventListener('change', function (e) {
+        const files = e.target.files;
+        const fileList = document.getElementById('fileList');
+        const imagePreview = document.getElementById('imagePreview');
+
+        fileList.innerHTML = '<strong>Các tệp được chọn:</strong><ul class="list-unstyled mt-2">';
+        imagePreview.innerHTML = '';
+
+        for (let file of files) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                fileList.innerHTML += `<li class="text-danger"><i class="bi bi-x-circle"></i> ${file.name} - Không phải hình ảnh</li>`;
+                continue;
+            }
+
+            if (file.type !== 'image/jpeg' && file.type !== 'image/png') {
+                fileList.innerHTML += `<li class="text-danger"><i class="bi bi-x-circle"></i> ${file.name} - Chỉ hỗ trợ JPG hoặc PNG</li>`;
+                continue;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                fileList.innerHTML += `<li class="text-danger"><i class="bi bi-x-circle"></i> ${file.name} - Tệp quá lớn (tối đa 5MB)</li>`;
+                continue;
+            }
+
+            fileList.innerHTML += `<li class="text-success"><i class="bi bi-check-circle"></i> ${file.name} - ${(file.size / 1024).toFixed(2)} KB</li>`;
+
+            // Image preview
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const previewDiv = document.createElement('div');
+                previewDiv.className = 'col-md-4 mb-3';
+                previewDiv.innerHTML = `
+                    <div class="card">
+                        <img src="${event.target.result}" class="card-img-top" style="object-fit: cover; height: 200px;">
+                        <div class="card-body p-2">
+                            <small class="text-muted">${file.name}</small>
+                        </div>
+                    </div>
+                `;
+                imagePreview.appendChild(previewDiv);
+            };
+            reader.readAsDataURL(file);
+        }
+        fileList.innerHTML += '</ul>';
+    });
+</script>
+
+<style>
+    .form-label {
+        font-weight: 500;
+    }
+
+    .text-danger {
+        color: #dc3545;
+    }
+</style>
